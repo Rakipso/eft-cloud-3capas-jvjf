@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arquitectura 3 Capas AWS - CCY0010</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; color: #222; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .banner { width: 100%; max-height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 15px; background: #232f3e; }
+        h1 { color: #232f3e; margin-top: 0; }
+        .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .card { background: #f8fafc; border-left: 4px solid #ff9900; padding: 12px; border-radius: 4px; font-size: 0.92em; }
+        .card strong { display: block; color: #555; margin-bottom: 4px; }
+        form { display: grid; grid-template-columns: 1fr 1fr 2fr auto; gap: 10px; margin-bottom: 25px; }
+        input, select, button { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.95em; }
+        button { background: #ff9900; color: #111; font-weight: bold; border: none; cursor: pointer; }
+        button:hover { background: #e68a00; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+        th { background: #232f3e; color: #fff; }
+        .alert { padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+        .ok { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        @media (max-width: 700px) { form { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    {% if s3_base_url %}
+    <img src="{{ s3_base_url }}/banner.jpg" alt="Recurso estático desde Amazon S3" class="banner" onerror="this.style.display='none'">
+    {% endif %}
+
+    <h1>Portal Cloud - Arquitectura de 3 Capas en AWS</h1>
+
+    <div class="status-grid">
+        <div class="card">
+            <strong>Instancia EC2 (Capa Cómputo)</strong>
+            {{ instance_id }}
+        </div>
+        <div class="card">
+            <strong>Zona de Disponibilidad</strong>
+            {{ az }}
+        </div>
+        <div class="card">
+            <strong>Base de Datos (Capa Datos)</strong>
+            {{ db_estado }}
+        </div>
+        <div class="card">
+            <strong>Almacenamiento Estático (S3)</strong>
+            {{ s3_base_url if s3_base_url else 'No configurado' }}
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert {{ category }}">{{ message }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <form action="/agregar" method="POST">
+        <input type="text" name="nombre" placeholder="Nombre del recurso" required>
+        <select name="categoria" required>
+            <option value="Red">Red (VPC)</option>
+            <option value="Cómputo">Cómputo (EC2)</option>
+            <option value="Datos">Datos (RDS)</option>
+            <option value="Almacenamiento">Almacenamiento (S3)</option>
+        </select>
+        <input type="text" name="descripcion" placeholder="Descripción breve" required>
+        <button type="submit">Guardar en RDS</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Recurso</th>
+                <th>Categoría</th>
+                <th>Descripción</th>
+                <th>Fecha (UTC)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in registros %}
+            <tr>
+                <td>{{ r.id }}</td>
+                <td>{{ r.nombre }}</td>
+                <td>{{ r.categoria }}</td>
+                <td>{{ r.descripcion }}</td>
+                <td>{{ r.fecha_registro }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No hay registros en RDS todavía. Agrega el primero arriba.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
